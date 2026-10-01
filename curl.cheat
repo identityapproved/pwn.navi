@@ -1,0 +1,16 @@
+% curl, http, web
+
+# HEAD request
+curl -sSI http://<ip>/
+
+# GET / dumping response headers to a file
+curl -sS -D headers.txt http://<ip>/ -o body.html
+
+# Fetch /robots.txt
+curl -sS http://<ip>/robots.txt
+
+# Fetch /sitemap.xml
+curl -sS http://<ip>/sitemap.xml
+
+# Probe allowed methods (OPTIONS)
+curl -sSI -X OPTIONS http://<ip>/

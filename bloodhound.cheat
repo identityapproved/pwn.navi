@@ -1,0 +1,46 @@
+% bloodhound, ad
+
+; --- BloodHound.py (legacy schema, BH 4.x) ---
+# Full collection, password auth
+bloodhound-python -u <user> -p <pass> -ns <ip> -d <domain> -c All --zip -op <user>
+
+# Pass-the-hash
+bloodhound-python -u <user> --hashes :<nthash> -ns <ip> -d <domain> -c All --zip -op <user>
+
+# Kerberos ticket (export KRB5CCNAME first)
+bloodhound-python -u <user> -k -no-pass -ns <ip> -d <domain> -c All --zip -op <user>
+
+# Machine account (quote the trailing $)
+bloodhound-python -u '<host>$' -p <pass> -ns <ip> -d <domain> -c All --zip -op host
+
+# Narrow scope (faster: Default + ACL + Container)
+bloodhound-python -u <user> -p <pass> -ns <ip> -d <domain> -c Default,ACL,Container --zip -op <user>_quick
+
+; --- BloodHound CE collectors ---
+# bloodhound-ce-python, password auth
+bloodhound-ce-python -u <user> -p <pass> -ns <ip> -d <domain> -c All --zip -op <user>
+
+# bloodhound-ce-python, NT hash
+bloodhound-ce-python -u <user> --hashes :<nthash> -ns <ip> -d <domain> -c All --zip -op <user>
+
+# rusthound-ce (fast Rust collector), password
+rusthound-ce -d <domain> -i <ip> -u <user>@<domain> -p <pass> -c All -o bh -z
+
+# rusthound-ce via NT hash
+rusthound-ce -d <domain> -i <ip> -u <user>@<domain> --hashes <nthash> -c All -o bh -z
+
+# rusthound-ce via kerberos (KRB5CCNAME)
+rusthound-ce -d <domain> -i <ip> -u <user>@<domain> -k -c All -o bh -z
+
+# NetExec bloodhound module (one-shot from a spray)
+nxc ldap <ip> -u <user> -p <pass> -d <domain> --bloodhound --collection All --dns-server <ip>
+
+; --- UI / database ---
+# Legacy BloodHound 4.x (needs neo4j on :7687)
+sudo neo4j start && bloodhound
+
+# Community Edition via docker compose (UI on :8080)
+sudo docker compose -f <compose_file> up -d
+
+# Grab the CE initial admin password from logs
+sudo docker compose -f <compose_file> logs bloodhound | grep -i 'initial password'

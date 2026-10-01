@@ -1,0 +1,10 @@
+% whatweb, nikto, web
+
+# whatweb aggressive fingerprint (-a 3)
+whatweb -a 3 --log-brief=whatweb.txt http://<ip>
+
+# Nikto baseline scan
+nikto -h http://<ip> -o nikto.txt -Format txt
+
+# whatweb then nikto
+whatweb -a 3 --log-brief=whatweb.txt http://<ip> && nikto -h http://<ip> -o nikto.txt -Format txt

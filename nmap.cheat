@@ -1,0 +1,280 @@
+% nmap, scanning, recon
+
+# TCP top-1000, service+version, fast
+sudo nmap -sV -T4 -oA fast <ip>
+
+# All TCP ports, service+version
+sudo nmap -p- -sV -T4 -oA full <ip>
+
+# UDP top 100
+sudo nmap -sU --top-ports 100 -oA udp <ip>
+
+# Default scripts + version (top-1000)
+sudo nmap -sV -sC -T4 -oA scripts <ip>
+
+# NSE vuln category (slow)
+sudo nmap -sV --script vuln -oA vuln <ip>
+
+# OS fingerprint (needs root)
+sudo nmap -O -T4 -oA os <ip>
+
+# Aggressive: OS + version + scripts + traceroute
+sudo nmap -A -T4 -oA aggressive <ip>
+
+; --- host discovery (no port scan) ---
+# Ping sweep a range (up/down only)
+sudo nmap -sn <cidr> -oA sweep
+
+# ARP sweep (same L2 segment, fast/reliable)
+sudo nmap -sn -PR <cidr> -oA arp_sweep
+
+# List scan (expand range, no packets, rDNS only)
+nmap -sL <cidr>
+
+# Treat host as up, skip discovery (firewalled hosts)
+sudo nmap -Pn -sV -T4 -oA pn <ip>
+
+# TCP SYN ping to common ports
+sudo nmap -sn -PS21,22,80,135,139,443,445,3389 <ip>
+
+# TCP ACK ping (past stateless filters)
+sudo nmap -sn -PA80,443,3389 <ip>
+
+# UDP ping
+sudo nmap -sn -PU53,123,161 <ip>
+
+# ICMP echo + timestamp + netmask ping
+sudo nmap -sn -PE -PP -PM <ip>
+
+; --- TCP scan techniques ---
+# SYN half-open (default as root, fast/stealthy)
+sudo nmap -sS -T4 -oA syn <ip>
+
+# connect() scan (no root needed)
+nmap -sT -T4 -oA connect <ip>
+
+# ACK scan (map filtered vs unfiltered)
+sudo nmap -sA -oA ack <ip>
+
+# Window scan (infer open via TCP window)
+sudo nmap -sW -oA window <ip>
+
+# Maimon (FIN/ACK probe)
+sudo nmap -sM <ip>
+
+# FIN scan
+sudo nmap -sF <ip>
+
+# Xmas scan (FIN+PSH+URG)
+sudo nmap -sX <ip>
+
+# Null scan (no flags)
+sudo nmap -sN <ip>
+
+# Custom flag combo
+sudo nmap --scanflags SYNFIN <ip>
+
+# Idle (zombie) scan, fully blind
+sudo nmap -sI <zombie>:80 <ip>
+
+# All 65535 ports, SYN
+sudo nmap -p- -sS -T4 -oA allports <ip>
+
+# Explicit port list / range
+sudo nmap -p 22,80,443,8000-8100 -sV <ip>
+
+# Top N ports by frequency
+sudo nmap --top-ports 2000 -sV <ip>
+
+# Fast mode (top 100)
+sudo nmap -F -sV <ip>
+
+# Scan ports in order, not randomized
+sudo nmap -p- -r <ip>
+
+; --- UDP scanning (slow, be deliberate) ---
+# Targeted UDP common services + version
+sudo nmap -sU -p 53,67,69,123,137,161,162,500,514,1900,4500,5353 -sV -oA udp_common <ip>
+
+# SNMP only + version
+sudo nmap -sU -p 161,162 -sV -oA snmp <ip>
+
+# DNS / NTP / IKE
+sudo nmap -sU -p 53,123,500 -sV <ip>
+
+# UDP top 100 + version (light)
+sudo nmap -sU --top-ports 100 -sV --version-intensity 0 -oA udp_top100 <ip>
+
+# All UDP ports (very slow)
+sudo nmap -sU -p- --max-retries 1 --min-rate 1000 -oA udp_all <ip>
+
+# Combined TCP+UDP top ports
+sudo nmap -sS -sU --top-ports 50 -sV -oA tcpudp <ip>
+
+; --- version detection tuning ---
+# Max intensity (most accurate, slowest)
+sudo nmap -sV --version-intensity 9 -oA ver9 <ip>
+
+# Light version detection (fast)
+sudo nmap -sV --version-intensity 0 <ip>
+
+# Version-all (== intensity 9)
+sudo nmap -sV --version-all <ip>
+
+# Banner grab via NSE
+sudo nmap -p- --script banner --open -oA banners <ip>
+
+# Explain why a port is open
+sudo nmap -sV --reason <ip>
+
+# Trace version probes to a log
+sudo nmap -sV --version-trace <ip>
+
+; --- NSE by service ---
+# HTTP: all http scripts except brute
+sudo nmap -p 80,443,8080,8443 --script "http-* and not http-brute" -oA http_nse <ip>
+
+# HTTP: title + headers + methods + robots
+sudo nmap -p 80,443 --script http-title,http-headers,http-methods,http-robots.txt <ip>
+
+# SMB: os/shares/users/security bundle
+sudo nmap -p 139,445 --script "smb-os-discovery,smb-enum-shares,smb-enum-users,smb-security-mode,smb2-security-mode" -oA smb_nse <ip>
+
+# SMB vuln family (MS17-010 etc.)
+sudo nmap -p 139,445 --script "smb-vuln-*" -oA smb_vuln <ip>
+
+# SSL/TLS: ciphers + cert + date + sslv2
+sudo nmap -p 443,8443 --script ssl-enum-ciphers,ssl-cert,ssl-date,sslv2 -oA ssl_nse <ip>
+
+# SSL heartbleed
+sudo nmap -p 443 --script ssl-heartbleed <ip>
+
+# FTP: anon / bounce / syst
+sudo nmap -p 21 --script ftp-anon,ftp-bounce,ftp-syst -oA ftp_nse <ip>
+
+# SSH: algos / hostkey / auth methods
+sudo nmap -p 22 --script ssh2-enum-algos,ssh-hostkey,ssh-auth-methods <ip>
+
+# DNS: nsid / recursion / zone transfer
+sudo nmap -p 53 --script dns-nsid,dns-recursion,dns-zone-transfer --script-args dns-zone-transfer.domain=<domain> -oA dns_nse <ip>
+
+# RDP: ntlm info + encryption
+sudo nmap -p 3389 --script rdp-ntlm-info,rdp-enum-encryption -oA rdp_nse <ip>
+
+# LDAP: rootdse + search
+sudo nmap -p 389 --script ldap-rootdse,ldap-search -oA ldap_nse <ip>
+
+# SMTP: commands / enum users / open relay
+sudo nmap -p 25,587 --script smtp-commands,smtp-enum-users,smtp-open-relay -oA smtp_nse <ip>
+
+# SNMP (UDP): info / interfaces / processes / software
+sudo nmap -sU -p 161 --script snmp-info,snmp-interfaces,snmp-processes,snmp-win32-software -oA snmp_nse <ip>
+
+# MySQL: info / empty password / databases
+sudo nmap -p 3306 --script mysql-info,mysql-empty-password,mysql-databases <ip>
+
+# MSSQL: info / ntlm info / empty password
+sudo nmap -p 1433 --script ms-sql-info,ms-sql-ntlm-info,ms-sql-empty-password <ip>
+
+# Oracle: SID brute + TNS version
+sudo nmap -p 1521 --script oracle-sid-brute,oracle-tns-version <ip>
+
+# RPC / NFS: rpcinfo / nfs-ls / showmount
+sudo nmap -p 111 --script rpcinfo,nfs-ls,nfs-showmount -oA nfs_nse <ip>
+
+# IKE / VPN version (UDP 500)
+sudo nmap -sU -p 500 --script ike-version <ip>
+
+; --- vulnerability scanning ---
+# Whole vuln category
+sudo nmap -sV --script vuln -oA vuln <ip>
+
+# vulners: map versions -> CVEs (needs internet)
+sudo nmap -sV --script vulners --script-args mincvss=7.0 -oA vulners <ip>
+
+# Exploit-tagged scripts only (intrusive)
+sudo nmap -sV --script "exploit" <ip>
+
+# EternalBlue (MS17-010)
+sudo nmap -p 445 --script smb-vuln-ms17-010 <ip>
+
+# SMBGhost (CVE-2020-0796)
+sudo nmap -p 445 --script smb-vuln-cve-2020-0796 <ip>
+
+# Shellshock
+sudo nmap -p 80,443 --script http-shellshock --script-args uri=/cgi-bin/test.cgi <ip>
+
+# Slowloris DoS check (safe probe)
+sudo nmap -p 80 --script http-slowloris-check <ip>
+
+; --- firewall / IDS evasion ---
+# Tiny fragments
+sudo nmap -f -sS <ip>
+
+# Set MTU (multiple of 8)
+sudo nmap --mtu 16 -sS <ip>
+
+# Random decoys
+sudo nmap -D RND:10 -sS <ip>
+
+# Explicit decoys (ME = your real position)
+sudo nmap -D 10.0.0.1,10.0.0.2,ME,10.0.0.4 -sS <ip>
+
+# Source port 53 (slip past allow-from rules)
+sudo nmap --source-port 53 -sS <ip>
+
+# Append random data
+sudo nmap --data-length 50 -sS <ip>
+
+# Spoof random MAC
+sudo nmap --spoof-mac 0 <ip>
+
+# Set TTL
+sudo nmap --ttl 64 -sS <ip>
+
+# Bad TCP/UDP checksums (probe broken stacks/IDS)
+sudo nmap --badsum <ip>
+
+# Route through a SOCKS proxy chain
+sudo nmap -sT --proxies socks4://127.0.0.1:9050 <ip>
+
+; --- timing & performance ---
+# Slow / stealthy
+sudo nmap -T2 -sS <ip>
+
+# Fastest reliable full-port recipe
+sudo nmap -p- --min-rate 5000 --max-retries 1 -sS -oA fastfull <ip>
+
+# Cap the rate (fragile targets)
+sudo nmap --max-rate 100 -sS <ip>
+
+# Host group + probe parallelism (ranges)
+sudo nmap --min-hostgroup 64 --min-parallelism 64 -sS <cidr>
+
+# Give up on slow hosts
+sudo nmap --host-timeout 15m -sV <ip>
+
+# RTT tuning
+sudo nmap --initial-rtt-timeout 100ms --max-rtt-timeout 500ms -sS <ip>
+
+# Scan delay (defeat rate-based IDS)
+sudo nmap --scan-delay 1s -sS <ip>
+
+; --- output / verbosity / resume ---
+# All three formats at once (.nmap/.xml/.gnmap)
+sudo nmap -sV -sC -oA full <ip>
+
+# Only show open ports
+sudo nmap -sV --open <ip>
+
+# Bump verbosity
+sudo nmap -sV -vv <ip>
+
+# Append instead of clobbering
+sudo nmap -sV -oN scan.nmap --append-output <ip>
+
+# Resume an interrupted scan
+sudo nmap --resume full.gnmap
+
+# Render XML -> HTML report
+xsltproc report.xml -o report.html

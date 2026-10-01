@@ -1,0 +1,22 @@
+% dig, dns, recon
+
+# ANY records against target
+dig @<ip> ANY <ip> +noall +answer
+
+# Attempt zone transfer (AXFR)
+dig @<ip> AXFR
+
+# NS records
+dig @<ip> NS <ip> +noall +answer
+
+# TXT records
+dig @<ip> TXT <ip> +noall +answer
+
+# MX records
+dig @<ip> MX <ip> +noall +answer
+
+# SOA record
+dig @<ip> SOA <ip> +noall +answer
+
+# Reverse lookup
+dig -x <ip> +noall +answer

