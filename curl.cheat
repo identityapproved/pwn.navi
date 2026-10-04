@@ -14,3 +14,94 @@ curl -sS http://<ip>/sitemap.xml
 
 # Probe allowed methods (OPTIONS)
 curl -sSI -X OPTIONS http://<ip>/
+
+# Fetch a well-known path, status code only
+curl -sS -o /dev/null -w '%{http_code}\n' http://<ip>/<path>
+
+# Sweep common exposed/default paths (status per path)
+for p in favicon.ico robots.txt sitemap.xml humans.txt crossdomain.xml .well-known/security.txt .git/HEAD .env server-status server-info phpinfo.php .htaccess backup.zip; do printf '%s -> ' "$p"; curl -sS -o /dev/null -w '%{http_code}\n' http://<ip>/"$p"; done
+
+# Server/tech headers only (grep fingerprint)
+curl -sSI http://<ip>/ | grep -iE 'server|x-powered-by|x-aspnet|set-cookie|location'
+
+# Follow redirects and print final URL + code
+curl -sSL -o /dev/null -w '%{http_code} %{url_effective}\n' http://<ip>/
+
+# Request timing breakdown
+curl -sS -o /dev/null -w 'dns=%{time_namelookup} connect=%{time_connect} ttfb=%{time_starttransfer} total=%{time_total}\n' http://<ip>/
+
+# Favicon hash (fingerprint default installs)
+curl -sS http://<ip>/favicon.ico | md5sum
+
+# HTTPS fetch ignoring cert (self-signed)
+curl -ksSI https://<ip>/
+
+# TLS certificate subject/issuer
+curl -kv https://<ip>/ 2>&1 | grep -iE 'subject:|issuer:|SSL connection|expire'
+
+# Custom User-Agent
+curl -sS -A "<ua>" http://<ip>/
+
+# vhost by Host header (resolve to IP)
+curl -sSI -H "Host: <host>" http://<ip>/
+
+# Basic auth
+curl -sS -u <user>:<pass> http://<ip>/
+
+# Bearer token header
+curl -sS -H "Authorization: Bearer <token>" http://<ip>/
+
+# Send a cookie
+curl -sS -b "<cookie>" http://<ip>/
+
+# Cookie jar: save then reuse
+curl -sS -c jar.txt -b jar.txt http://<ip>/
+
+# POST form data
+curl -sS -d "<field>=<value>" http://<ip>/
+
+# POST JSON
+curl -sS -H 'Content-Type: application/json' -d '<json>' http://<ip>/
+
+# PUT upload a file (WebDAV write test)
+curl -sS -T <file> http://<ip>/<path>
+
+# Arbitrary method (e.g. PROPFIND / PATCH / DELETE)
+curl -sSI -X <method> http://<ip>/
+
+# Route through intercepting proxy (Burp/ZAP)
+curl -ksS -x http://127.0.0.1:8080 http://<ip>/
+
+# Verbose trace of request/response
+curl -sS -v http://<ip>/ 2>&1
+
+# Download file (overwrite) / resume partial
+curl -sS -C - -o <file> http://<ip>/<path>
+
+; common default/known web paths worth probing
+$ path: printf '%s\n' \
+    robots.txt \
+    sitemap.xml \
+    favicon.ico \
+    humans.txt \
+    crossdomain.xml \
+    .well-known/security.txt \
+    .git/HEAD \
+    .env \
+    server-status \
+    server-info \
+    phpinfo.php \
+    .htaccess \
+    web.config \
+    backup.zip
+
+; a handful of plausible user-agent strings
+$ ua: printf '%s\n' \
+    "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0" \
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36" \
+    "curl/8.7.1" \
+    "Googlebot/2.1 (+http://www.google.com/bot.html)"
+
+; methods to probe once OPTIONS shows what is allowed
+$ method: printf '%s\n' \
+    GET POST PUT DELETE PATCH OPTIONS TRACE PROPFIND MKCOL MOVE COPY
