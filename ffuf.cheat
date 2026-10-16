@@ -27,12 +27,16 @@ ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json 
 # vhost brute via Host header (add -fs <baseline> after first run)
 ffuf -ac -u http://<ip>/ -H "Host: FUZZ.<domain>" -w <sublist> -mc all -of json -o ffuf_vhosts.json
 
+# vhost enum append-domain style, 100 threads (gobuster-equivalent)
+ffuf -ac -u http://<domain>/ -H "Host: FUZZ.<domain>" -w <sublist> -t 100 -mc all -fs <len> -of json -o ffuf_vhost_ad.json
+
 ; web content lists live under $HOME/wordlists/seclists
 $ wordlist: printf '%s\n' \
     "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt" \
     "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt" \
     "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-directories.txt" \
     "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-files.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/trickest-robots-disallowed-wordlists/top-10000.txt" \
     "$HOME/wordlists/seclists/Discovery/Web-Content/big.txt" \
     "$HOME/wordlists/seclists/Discovery/Web-Content/api/objects.txt"
 

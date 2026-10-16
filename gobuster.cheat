@@ -1,0 +1,30 @@
+% gobuster, fuzzing, dns, vhost, web
+
+# vhost enum, append-domain, 100 threads
+gobuster vhost -u http://<domain>/ --domain <domain> -w <sublist> --append-domain -t 100
+
+# vhost enum, append-domain, drop baseline response length
+gobuster vhost -u http://<domain>/ --domain <domain> -w <sublist> --append-domain -t 100 --exclude-length <len>
+
+; modes below are standard gobuster usage, not run this session
+# DNS subdomain brute (needs a resolvable zone / set --resolver)
+gobuster dns -d <domain> -w <sublist> -t 100
+
+# Directory brute (404 filtered by default)
+gobuster dir -u http://<url>/ -w <wordlist> -t 100
+
+# Directory brute with extensions
+gobuster dir -u http://<url>/ -w <wordlist> -x php,txt,html -t 100
+
+; subdomain/vhost lists live under $HOME/wordlists/seclists
+$ sublist: printf '%s\n' \
+    "$HOME/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt" \
+    "$HOME/wordlists/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
+
+; web content lists live under $HOME/wordlists/seclists
+$ wordlist: printf '%s\n' \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-directories.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/raft-small-files.txt" \
+    "$HOME/wordlists/seclists/Discovery/Web-Content/big.txt"
